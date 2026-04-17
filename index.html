@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Penales Pro</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <main class="game-shell">
+    <section class="topbar glass">
+      <div>
+        <p class="mini-tag">MODO FÚTBOL</p>
+        <h1>Penales Pro</h1>
+        <p class="subtitle">Elegí dónde patear e intentá meter la mayor cantidad de goles.</p>
+      </div>
+
+      <div class="scoreboard">
+        <div class="score-card">
+          <span>Ronda</span>
+          <strong id="shots">0 / 5</strong>
+        </div>
+        <div class="score-card">
+          <span>Goles</span>
+          <strong id="goals">0</strong>
+        </div>
+        <div class="score-card">
+          <span>Nivel</span>
+          <strong id="difficulty">Medio</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="stadium glass">
+      <div class="crowd"></div>
+
+      <div class="goal-wrapper">
+        <div class="goal">
+          <div class="net"></div>
+          <div class="goalkeeper" id="goalkeeper">
+            <div class="keeper-head"></div>
+            <div class="keeper-body"></div>
+            <div class="keeper-arm left"></div>
+            <div class="keeper-arm right"></div>
+            <div class="keeper-leg left"></div>
+            <div class="keeper-leg right"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="shot-direction" id="shotDirection">Esperando tu disparo...</div>
+
+      <div class="pitch">
+        <div class="penalty-spot"></div>
+        <div class="ball" id="ball"></div>
+      </div>
+    </section>
+
+    <section class="controls-panel glass">
+      <div class="controls-head">
+        <div>
+          <p class="mini-tag">DISPARO</p>
+          <h2>Elegí dirección</h2>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button class="shot-btn left-btn" onclick="shoot('izquierda')">Izquierda</button>
+        <button class="shot-btn center-btn" onclick="shoot('centro')">Centro</button>
+        <button class="shot-btn right-btn" onclick="shoot('derecha')">Derecha</button>
+      </div>
+
+      <div class="status-box">
+        <p id="message">Preparado para patear.</p>
+      </div>
+
+      <div class="bottom-actions">
+        <button class="secondary-btn" onclick="restartGame()">Reiniciar juego</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
