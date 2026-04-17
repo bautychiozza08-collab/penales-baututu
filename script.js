@@ -23,7 +23,7 @@ const teams = [
 
 const playerTeamSelect = document.getElementById("playerTeam");
 const cpuTeamSelect = document.getElementById("cpuTeam");
-const startMatchBtn = document.getElementById("startMatchBtn");
+const startBtn = document.getElementById("startBtn");
 const restartBtn = document.getElementById("restartBtn");
 
 const playerFlag = document.getElementById("playerFlag");
@@ -38,43 +38,48 @@ const turnText = document.getElementById("turnText");
 const stateText = document.getElementById("stateText");
 const phaseText = document.getElementById("phaseText");
 const actionTitle = document.getElementById("actionTitle");
-const messageEl = document.getElementById("message");
-const shotInfo = document.getElementById("shotInfo");
 const playerTrack = document.getElementById("playerTrack");
 const cpuTrack = document.getElementById("cpuTrack");
+const messageEl = document.getElementById("message");
+const shotInfo = document.getElementById("shotInfo");
 
 const keeperEl = document.getElementById("keeper");
 const ballEl = document.getElementById("ball");
 
+const powerInput = document.getElementById("powerInput");
+const accuracyInput = document.getElementById("accuracyInput");
+const powerValue = document.getElementById("powerValue");
+const accuracyValue = document.getElementById("accuracyValue");
+
 const directions = ["izquierda", "centro", "derecha"];
 
-let state = {};
+let game = {};
 
 function fillTeams() {
-  teams.forEach((team, index) => {
-    const option1 = document.createElement("option");
-    option1.value = team.name;
-    option1.textContent = `${team.flag} ${team.name}`;
-    playerTeamSelect.appendChild(option1);
+  teams.forEach(team => {
+    const a = document.createElement("option");
+    a.value = team.name;
+    a.textContent = `${team.flag} ${team.name}`;
+    playerTeamSelect.appendChild(a);
 
-    const option2 = document.createElement("option");
-    option2.value = team.name;
-    option2.textContent = `${team.flag} ${team.name}`;
-    cpuTeamSelect.appendChild(option2);
+    const b = document.createElement("option");
+    b.value = team.name;
+    b.textContent = `${team.flag} ${team.name}`;
+    cpuTeamSelect.appendChild(b);
   });
 
   playerTeamSelect.value = "Argentina";
   cpuTeamSelect.value = "Brasil";
 }
 
-function getTeamByName(name) {
-  return teams.find(team => team.name === name);
+function teamByName(name) {
+  return teams.find(t => t.name === name);
 }
 
-function initState() {
-  state = {
-    playerTeam: getTeamByName(playerTeamSelect.value),
-    cpuTeam: getTeamByName(cpuTeamSelect.value),
+function resetGame() {
+  game = {
+    playerTeam: teamByName(playerTeamSelect.value),
+    cpuTeam: teamByName(cpuTeamSelect.value),
     playerScore: 0,
     cpuScore: 0,
     playerShots: 0,
@@ -87,36 +92,46 @@ function initState() {
     busy: false
   };
 
-  if (state.playerTeam.name === state.cpuTeam.name) {
-    const alt = teams.find(t => t.name !== state.playerTeam.name);
-    state.cpuTeam = alt;
-    cpuTeamSelect.value = alt.name;
+  if (game.playerTeam.name === game.cpuTeam.name) {
+    const other = teams.find(t => t.name !== game.playerTeam.name);
+    game.cpuTeam = other;
+    cpuTeamSelect.value = other.name;
   }
 
+  powerInput.value = 50;
+  accuracyInput.value = 75;
+  updateMeterLabels();
   updateUI();
   resetField();
-  messageEl.textContent = "Arrancó la tanda. Primero pateás vos.";
+
+  messageEl.textContent = `Arrancó la tanda entre ${game.playerTeam.name} y ${game.cpuTeam.name}.`;
   shotInfo.textContent = "Elegí dirección de tiro.";
 }
 
+function updateMeterLabels() {
+  powerValue.textContent = powerInput.value;
+  accuracyValue.textContent = accuracyInput.value;
+}
+
 function updateUI() {
-  playerFlag.textContent = state.playerTeam.flag;
-  cpuFlag.textContent = state.cpuTeam.flag;
-  playerTeamName.textContent = state.playerTeam.name;
-  cpuTeamName.textContent = state.cpuTeam.name;
-  playerScoreEl.textContent = state.playerScore;
-  cpuScoreEl.textContent = state.cpuScore;
-  roundText.textContent = state.round;
+  playerFlag.textContent = game.playerTeam.flag;
+  cpuFlag.textContent = game.cpuTeam.flag;
+  playerTeamName.textContent = game.playerTeam.name;
+  cpuTeamName.textContent = game.cpuTeam.name;
+
+  playerScoreEl.textContent = game.playerScore;
+  cpuScoreEl.textContent = game.cpuScore;
+  roundText.textContent = game.round;
 
   let turnLabel = "Tu disparo";
-  if (state.phase === "cpu-kick") turnLabel = "Tu atajada";
-  if (state.phase === "sudden-player") turnLabel = "Muerte súbita: tu disparo";
-  if (state.phase === "sudden-cpu") turnLabel = "Muerte súbita: tu atajada";
+  if (game.phase === "cpu-kick") turnLabel = "Tu atajada";
+  if (game.phase === "sudden-player") turnLabel = "Muerte súbita: tu disparo";
+  if (game.phase === "sudden-cpu") turnLabel = "Muerte súbita: tu atajada";
 
   turnText.textContent = turnLabel;
   actionTitle.textContent = turnLabel;
-  phaseText.textContent = state.round > 5 ? "Muerte súbita" : "Tanda de penales";
-  stateText.textContent = state.gameOver ? "Finalizado" : "Jugando";
+  phaseText.textContent = game.round > 5 ? "Muerte súbita" : "Tanda de penales";
+  stateText.textContent = game.gameOver ? "Finalizado" : "Jugando";
 
   renderTrackers();
 }
@@ -125,13 +140,13 @@ function renderTrackers() {
   playerTrack.innerHTML = "";
   cpuTrack.innerHTML = "";
 
-  state.playerResults.forEach(result => {
+  game.playerResults.forEach(result => {
     const dot = document.createElement("div");
     dot.className = `track-dot ${result ? "goal" : "miss"}`;
     playerTrack.appendChild(dot);
   });
 
-  state.cpuResults.forEach(result => {
+  game.cpuResults.forEach(result => {
     const dot = document.createElement("div");
     dot.className = `track-dot ${result ? "goal" : "miss"}`;
     cpuTrack.appendChild(dot);
@@ -146,28 +161,23 @@ function resetField() {
   ballEl.style.transform = "translateX(-50%) scale(1)";
 }
 
-function moveKeeper(direction) {
-  if (direction === "izquierda") {
-    keeperEl.style.left = "25%";
-    keeperEl.style.transform = "translateX(-50%) rotate(-10deg)";
-  } else if (direction === "centro") {
-    keeperEl.style.left = "50%";
-    keeperEl.style.transform = "translateX(-50%) scale(1.03)";
-  } else {
-    keeperEl.style.left = "75%";
-    keeperEl.style.transform = "translateX(-50%) rotate(10deg)";
-  }
-}
-
-function animateBall(direction, isKick) {
+function moveKeeper(direction, isPlayerKeeper = false) {
   let left = "50%";
-  if (direction === "izquierda") left = "23%";
-  if (direction === "centro") left = "50%";
-  if (direction === "derecha") left = "77%";
+  let transform = "translateX(-50%)";
 
-  ballEl.style.left = left;
-  ballEl.style.bottom = "175px";
-  ballEl.style.transform = "translateX(-50%) scale(0.72)";
+  if (direction === "izquierda") {
+    left = "25%";
+    transform = "translateX(-50%) rotate(-10deg)";
+  } else if (direction === "centro") {
+    left = "50%";
+    transform = "translateX(-50%) scale(1.03)";
+  } else if (direction === "derecha") {
+    left = "75%";
+    transform = "translateX(-50%) rotate(10deg)";
+  }
+
+  keeperEl.style.left = left;
+  keeperEl.style.transform = transform;
 }
 
 function directionLabel(direction) {
@@ -180,155 +190,215 @@ function randomDirection() {
   return directions[Math.floor(Math.random() * directions.length)];
 }
 
-function evaluateEarlyEnd() {
-  const playerRemaining = 5 - state.playerShots;
-  const cpuRemaining = 5 - state.cpuShots;
+function animateBall(direction, power) {
+  let left = "50%";
+  if (direction === "izquierda") left = "23%";
+  if (direction === "centro") left = "50%";
+  if (direction === "derecha") left = "77%";
 
-  if (state.playerScore > state.cpuScore + cpuRemaining) return "player";
-  if (state.cpuScore > state.playerScore + playerRemaining) return "cpu";
+  const maxBottom = 165 + Math.round(power * 0.5);
+
+  ballEl.style.left = left;
+  ballEl.style.bottom = `${maxBottom}px`;
+  ballEl.style.transform = "translateX(-50%) scale(0.72)";
+}
+
+function evaluateEarlyWin() {
+  const playerRemaining = 5 - game.playerShots;
+  const cpuRemaining = 5 - game.cpuShots;
+
+  if (game.playerScore > game.cpuScore + cpuRemaining) return "player";
+  if (game.cpuScore > game.playerScore + playerRemaining) return "cpu";
   return null;
 }
 
 function finishGame(winner) {
-  state.gameOver = true;
+  game.gameOver = true;
   updateUI();
 
   if (winner === "player") {
-    messageEl.textContent = `🏆 ¡Ganó ${state.playerTeam.name}! Le ganaste a ${state.cpuTeam.name} en la tanda.`;
-  } else if (winner === "cpu") {
-    messageEl.textContent = `😓 Ganó ${state.cpuTeam.name}. Probá otra vez y tomá revancha.`;
+    messageEl.textContent = `🏆 ¡Ganó ${game.playerTeam.name}! Le ganaste a ${game.cpuTeam.name} en la tanda.`;
   } else {
-    messageEl.textContent = "🤯 Sigue la igualdad. Esto no debería pasar.";
+    messageEl.textContent = `😓 Ganó ${game.cpuTeam.name}. Probá otra vez y buscá revancha.`;
   }
 
   shotInfo.textContent = "Partido terminado.";
 }
 
-function nextPhase() {
-  if (state.gameOver) return;
+function goNextPhase() {
+  if (game.gameOver) return;
 
-  if (state.round <= 5) {
-    const earlyWinner = evaluateEarlyEnd();
-    if (earlyWinner) {
-      finishGame(earlyWinner);
+  if (game.round <= 5) {
+    const early = evaluateEarlyWin();
+    if (early) {
+      finishGame(early);
       return;
     }
   }
 
-  if (state.phase === "player-kick") {
-    state.phase = "cpu-kick";
-  } else if (state.phase === "cpu-kick") {
-    if (state.round < 5) {
-      state.round += 1;
-      state.phase = "player-kick";
+  if (game.phase === "player-kick") {
+    game.phase = "cpu-kick";
+  } else if (game.phase === "cpu-kick") {
+    if (game.round < 5) {
+      game.round += 1;
+      game.phase = "player-kick";
     } else {
-      if (state.playerScore !== state.cpuScore) {
-        finishGame(state.playerScore > state.cpuScore ? "player" : "cpu");
+      if (game.playerScore !== game.cpuScore) {
+        finishGame(game.playerScore > game.cpuScore ? "player" : "cpu");
         return;
       }
-      state.round += 1;
-      state.phase = "sudden-player";
+      game.round += 1;
+      game.phase = "sudden-player";
       messageEl.textContent = "🔥 Empieza la muerte súbita.";
     }
-  } else if (state.phase === "sudden-player") {
-    state.phase = "sudden-cpu";
-  } else if (state.phase === "sudden-cpu") {
-    const playerLast = state.playerResults[state.playerResults.length - 1];
-    const cpuLast = state.cpuResults[state.cpuResults.length - 1];
+  } else if (game.phase === "sudden-player") {
+    game.phase = "sudden-cpu";
+  } else if (game.phase === "sudden-cpu") {
+    const lastPlayer = game.playerResults[game.playerResults.length - 1];
+    const lastCpu = game.cpuResults[game.cpuResults.length - 1];
 
-    if (playerLast !== cpuLast) {
-      finishGame(playerLast ? "player" : "cpu");
+    if (lastPlayer !== lastCpu) {
+      finishGame(lastPlayer ? "player" : "cpu");
       return;
     }
 
-    state.round += 1;
-    state.phase = "sudden-player";
+    game.round += 1;
+    game.phase = "sudden-player";
     messageEl.textContent = "🔥 Sigue la muerte súbita.";
   }
 
   updateUI();
-  if (!state.gameOver) {
-    shotInfo.textContent = state.phase === "player-kick" || state.phase === "sudden-player"
-      ? "Elegí dirección de tiro."
-      : "Elegí hacia dónde te tirás.";
+
+  if (!game.gameOver) {
+    shotInfo.textContent =
+      game.phase === "player-kick" || game.phase === "sudden-player"
+        ? "Elegí dirección de tiro."
+        : "Elegí hacia dónde te tirás.";
   }
+}
+
+function shotMissesByPowerAndAccuracy(power, accuracy) {
+  const missChance = Math.max(3, Math.round((100 - accuracy) * 0.22 + Math.max(0, power - 88) * 0.65));
+  return Math.random() * 100 < missChance;
+}
+
+function goalkeeperSaveChance(power, accuracy) {
+  const base = 34;
+  const bonus = Math.max(0, 70 - power) * 0.18 + Math.max(0, 80 - accuracy) * 0.12;
+  return base + bonus;
+}
+
+function cpuShotQuality() {
+  return {
+    power: 55 + Math.floor(Math.random() * 36),
+    accuracy: 58 + Math.floor(Math.random() * 35)
+  };
 }
 
 function registerPlayerShot(goal) {
-  state.playerShots += 1;
-  if (goal) state.playerScore += 1;
-  state.playerResults.push(goal);
+  game.playerShots += 1;
+  if (goal) game.playerScore += 1;
+  game.playerResults.push(goal);
 }
 
 function registerCpuShot(goal) {
-  state.cpuShots += 1;
-  if (goal) state.cpuScore += 1;
-  state.cpuResults.push(goal);
+  game.cpuShots += 1;
+  if (goal) game.cpuScore += 1;
+  game.cpuResults.push(goal);
 }
 
-function playAction(direction) {
-  if (state.gameOver || state.busy) return;
+function playTurn(direction) {
+  if (game.gameOver || game.busy) return;
+  game.busy = true;
 
-  state.busy = true;
-
-  const isPlayerKicking = state.phase === "player-kick" || state.phase === "sudden-player";
-  const cpuChoice = randomDirection();
+  const isPlayerKicking = game.phase === "player-kick" || game.phase === "sudden-player";
 
   if (isPlayerKicking) {
+    const power = Number(powerInput.value);
+    const accuracy = Number(accuracyInput.value);
+    const keeperChoice = randomDirection();
+
     shotInfo.textContent = `Pateaste ${directionLabel(direction)}...`;
-    animateBall(direction, true);
+    animateBall(direction, power);
 
     setTimeout(() => {
-      moveKeeper(cpuChoice);
+      moveKeeper(keeperChoice);
     }, 120);
 
     setTimeout(() => {
-      const goal = direction !== cpuChoice;
+      const wildMiss = shotMissesByPowerAndAccuracy(power, accuracy);
+      let goal = false;
+
+      if (wildMiss) {
+        goal = false;
+        messageEl.textContent = `😬 La tiraste afuera. Demasiada potencia o poca precisión.`;
+      } else {
+        const saveProbability = goalkeeperSaveChance(power, accuracy);
+        const keeperSaves = direction === keeperChoice && Math.random() * 100 < saveProbability;
+        goal = !keeperSaves;
+
+        if (goal) {
+          messageEl.textContent = `⚽ ¡Gol de ${game.playerTeam.name}! Pateaste ${directionLabel(direction)} con ${power} de potencia.`;
+        } else {
+          messageEl.textContent = `🧤 ¡Atajó ${game.cpuTeam.name}! El arquero fue ${directionLabel(keeperChoice)}.`;
+        }
+      }
+
       registerPlayerShot(goal);
-
-      if (goal) {
-        messageEl.textContent = `⚽ ¡Gol de ${state.playerTeam.name}! El arquero fue ${directionLabel(cpuChoice)}.`;
-      } else {
-        messageEl.textContent = `🧤 ¡Atajó ${state.cpuTeam.name}! El arquero fue ${directionLabel(cpuChoice)}.`;
-      }
-
       updateUI();
+
       setTimeout(() => {
         resetField();
-        nextPhase();
-        state.busy = false;
-      }, 700);
-    }, 700);
+        goNextPhase();
+        game.busy = false;
+      }, 750);
+    }, 720);
   } else {
+    const cpuShot = cpuShotQuality();
+    const cpuDirection = randomDirection();
+
     shotInfo.textContent = `Te tiraste ${directionLabel(direction)}...`;
-    animateBall(cpuChoice, true);
+    animateBall(cpuDirection, cpuShot.power);
 
     setTimeout(() => {
-      moveKeeper(direction);
+      moveKeeper(direction, true);
     }, 120);
 
     setTimeout(() => {
-      const goal = cpuChoice !== direction;
-      registerCpuShot(goal);
+      const cpuWildMiss = shotMissesByPowerAndAccuracy(cpuShot.power, cpuShot.accuracy);
+      let goal = false;
 
-      if (goal) {
-        messageEl.textContent = `😬 Gol de ${state.cpuTeam.name}. Pateó ${directionLabel(cpuChoice)}.`;
+      if (cpuWildMiss) {
+        goal = false;
+        messageEl.textContent = `😮 ${game.cpuTeam.name} la tiró afuera.`;
       } else {
-        messageEl.textContent = `🧤 ¡Atajada tuya! Te tiraste ${directionLabel(direction)} y tapaste el penal.`;
+        const yourSaveChance = goalkeeperSaveChance(cpuShot.power, cpuShot.accuracy);
+        const youSave = direction === cpuDirection && Math.random() * 100 < yourSaveChance;
+        goal = !youSave;
+
+        if (goal) {
+          messageEl.textContent = `😬 Gol de ${game.cpuTeam.name}. Pateó ${directionLabel(cpuDirection)}.`;
+        } else {
+          messageEl.textContent = `🧤 ¡Atajada tuya! Tapaste el penal de ${game.cpuTeam.name}.`;
+        }
       }
 
+      registerCpuShot(goal);
       updateUI();
+
       setTimeout(() => {
         resetField();
-        nextPhase();
-        state.busy = false;
-      }, 700);
-    }, 700);
+        goNextPhase();
+        game.busy = false;
+      }, 750);
+    }, 720);
   }
 }
 
-startMatchBtn.addEventListener("click", initState);
-restartBtn.addEventListener("click", initState);
+powerInput.addEventListener("input", updateMeterLabels);
+accuracyInput.addEventListener("input", updateMeterLabels);
+startBtn.addEventListener("click", resetGame);
+restartBtn.addEventListener("click", resetGame);
 
 fillTeams();
-initState();
+resetGame();

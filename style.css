@@ -5,18 +5,18 @@
 }
 
 :root {
-  --bg: #07111f;
-  --bg2: #0d1933;
-  --panel: rgba(255,255,255,0.08);
-  --line: rgba(255,255,255,0.12);
-  --text: #f7f9ff;
-  --muted: #b8c5e2;
+  --bg: #07101f;
+  --bg2: #0d1730;
+  --panel: rgba(255, 255, 255, 0.08);
+  --line: rgba(255, 255, 255, 0.12);
+  --text: #f8faff;
+  --muted: #b6c4e0;
   --primary: #4f46e5;
   --cyan: #22d3ee;
   --green: #22c55e;
   --yellow: #facc15;
   --red: #fb7185;
-  --shadow: 0 22px 70px rgba(0,0,0,0.35);
+  --shadow: 0 22px 70px rgba(0, 0, 0, 0.35);
 }
 
 body {
@@ -59,10 +59,10 @@ body {
 .app {
   position: relative;
   z-index: 2;
-  width: min(1250px, calc(100% - 24px));
-  margin: 12px auto 24px;
+  width: min(1280px, calc(100% - 18px));
+  margin: 10px auto 24px;
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 .glass {
@@ -74,9 +74,9 @@ body {
 }
 
 .topbar,
-.selection-panel,
-.teams-score,
-.penalty-tracker,
+.setup,
+.score-panel,
+.tracker-panel,
 .stadium,
 .controls {
   padding: 22px;
@@ -113,13 +113,13 @@ h1 {
   line-height: 1.6;
 }
 
-.scoreboard {
+.top-stats {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
 
-.score-card {
+.stat-box {
   min-width: 120px;
   padding: 14px 16px;
   border-radius: 18px;
@@ -127,52 +127,55 @@ h1 {
   border: 1px solid var(--line);
 }
 
-.score-card span {
+.stat-box span {
   display: block;
   font-size: 0.84rem;
   color: var(--muted);
   margin-bottom: 6px;
 }
 
-.score-card strong {
-  font-size: 1.2rem;
+.stat-box strong {
+  font-size: 1.15rem;
 }
 
-.section-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
+.setup-head,
+.controls-head {
+  margin-bottom: 16px;
 }
 
-.section-head h2 {
+.setup-head h2,
+.controls-head h2 {
   margin-top: 8px;
   font-size: 1.7rem;
   letter-spacing: -0.04em;
 }
 
-.selectors {
+.setup-grid {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
   gap: 14px;
   align-items: end;
 }
 
-.selector-box label {
+.field-box label {
   display: block;
   margin-bottom: 8px;
-  color: #dce6ff;
   font-weight: 700;
+  color: #dce6ff;
 }
 
-select, button {
+select,
+button,
+input {
   font: inherit;
 }
 
-select {
+select,
+input[type="range"] {
   width: 100%;
+}
+
+select {
   background: rgba(255,255,255,0.06);
   color: var(--text);
   border: 1px solid var(--line);
@@ -206,19 +209,14 @@ select {
   border: 1px solid var(--line);
 }
 
-.match-panel {
-  display: grid;
-  gap: 18px;
-}
-
-.teams-score {
+.score-panel {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   gap: 16px;
   align-items: center;
 }
 
-.team-block {
+.team-card {
   text-align: center;
   padding: 16px;
   border-radius: 22px;
@@ -231,21 +229,21 @@ select {
   margin-bottom: 10px;
 }
 
-.team-block h3 {
+.team-card h3 {
   font-size: 1.3rem;
   margin-bottom: 8px;
 }
 
-.big-score {
+.score {
   font-size: 3rem;
   font-weight: 900;
 }
 
-.center-match {
+.center-score {
   text-align: center;
 }
 
-.versus {
+.vs {
   font-size: 2rem;
   font-weight: 900;
   margin-bottom: 8px;
@@ -255,7 +253,7 @@ select {
   color: var(--muted);
 }
 
-.penalty-tracker {
+.tracker-panel {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 18px;
@@ -290,29 +288,30 @@ select {
 }
 
 .crowd {
-  height: 70px;
+  height: 72px;
   border-radius: 20px;
   background:
-    radial-gradient(circle at 10% 50%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
-    radial-gradient(circle at 18% 40%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
-    radial-gradient(circle at 30% 55%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
-    radial-gradient(circle at 42% 45%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
-    radial-gradient(circle at 55% 48%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
-    radial-gradient(circle at 67% 43%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
-    radial-gradient(circle at 79% 57%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
-    radial-gradient(circle at 90% 46%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
+    radial-gradient(circle at 8% 45%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
+    radial-gradient(circle at 16% 55%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
+    radial-gradient(circle at 26% 42%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
+    radial-gradient(circle at 36% 58%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
+    radial-gradient(circle at 48% 48%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
+    radial-gradient(circle at 60% 52%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
+    radial-gradient(circle at 72% 45%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
+    radial-gradient(circle at 84% 58%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
+    radial-gradient(circle at 94% 48%, rgba(255,255,255,0.18) 0 3px, transparent 4px),
     linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
   margin-bottom: 16px;
 }
 
-.goal-zone {
+.goal-wrapper {
   display: flex;
   justify-content: center;
 }
 
 .goal {
-  width: min(760px, 100%);
-  height: 265px;
+  width: min(780px, 100%);
+  height: 270px;
   position: relative;
   border: 10px solid #ffffff;
   border-bottom: none;
@@ -335,35 +334,35 @@ select {
   position: absolute;
   left: 50%;
   bottom: 18px;
-  width: 96px;
-  height: 140px;
+  width: 102px;
+  height: 150px;
   transform: translateX(-50%);
-  transition: left 0.35s ease, transform 0.35s ease;
+  transition: left 0.36s ease, transform 0.36s ease;
 }
 
 .keeper-shadow {
   position: absolute;
-  width: 70px;
+  width: 72px;
   height: 14px;
   background: rgba(0,0,0,0.25);
   border-radius: 50%;
-  bottom: -3px;
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
 }
 
 .keeper-head {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: #ffd3b6;
+  background: #ffd2b3;
   margin: 0 auto;
   box-shadow: inset -4px -4px 0 rgba(0,0,0,0.08);
 }
 
-.keeper-torso {
-  width: 46px;
-  height: 54px;
+.keeper-body {
+  width: 50px;
+  height: 58px;
   margin: 4px auto 0;
   border-radius: 14px;
   background: linear-gradient(180deg, #f59e0b, #d97706);
@@ -378,50 +377,45 @@ select {
 
 .keeper-arm {
   width: 14px;
-  height: 48px;
-  background: #ffd3b6;
-  top: 28px;
+  height: 52px;
+  background: #ffd2b3;
+  top: 30px;
 }
 
-.keeper-arm.left {
-  left: 12px;
-  transform: rotate(36deg);
+.arm-left {
+  left: 14px;
+  transform: rotate(34deg);
 }
 
-.keeper-arm.right {
-  right: 12px;
-  transform: rotate(-36deg);
+.arm-right {
+  right: 14px;
+  transform: rotate(-34deg);
 }
 
 .keeper-glove {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   background: #f8fafc;
-  top: 60px;
+  top: 64px;
 }
 
-.keeper-glove.left {
-  left: 2px;
-}
-
-.keeper-glove.right {
-  right: 2px;
-}
+.glove-left { left: 2px; }
+.glove-right { right: 2px; }
 
 .keeper-leg {
   width: 14px;
-  height: 42px;
+  height: 44px;
   background: #1f2937;
   bottom: 8px;
 }
 
-.keeper-leg.left {
-  left: 28px;
+.leg-left {
+  left: 30px;
   transform: rotate(10deg);
 }
 
-.keeper-leg.right {
-  right: 28px;
+.leg-right {
+  right: 30px;
   transform: rotate(-10deg);
 }
 
@@ -435,7 +429,7 @@ select {
 
 .pitch {
   position: relative;
-  height: 280px;
+  height: 290px;
   margin-top: 8px;
   border-radius: 24px;
   background: linear-gradient(180deg, #1f7a34 0%, #15602a 100%);
@@ -464,17 +458,16 @@ select {
   border-radius: 50%;
   background: white;
   left: 50%;
-  bottom: 74px;
+  bottom: 76px;
   transform: translateX(-50%);
 }
 
 .ball {
   position: absolute;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 30% 30%, #fff 0 24%, #d1d5db 25% 100%);
+  background: radial-gradient(circle at 30% 30%, #fff 0 24%, #d1d5db 25% 100%);
   left: 50%;
   bottom: 50px;
   transform: translateX(-50%);
@@ -482,7 +475,7 @@ select {
   box-shadow: 0 8px 18px rgba(0,0,0,0.25);
 }
 
-.direction-hint {
+.arrow {
   position: absolute;
   bottom: 14px;
   font-size: 1.4rem;
@@ -490,17 +483,42 @@ select {
   color: rgba(255,255,255,0.45);
 }
 
-.direction-hint.left { left: 18%; }
-.direction-hint.center { left: 50%; transform: translateX(-50%); }
-.direction-hint.right { right: 18%; }
+.arrow-left { left: 18%; }
+.arrow-center { left: 50%; transform: translateX(-50%); }
+.arrow-right { right: 18%; }
 
-.controls .section-head {
-  margin-bottom: 14px;
+.meters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
-#actionTitle {
-  margin-top: 8px;
-  font-size: 1.8rem;
+.meter-box {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--line);
+}
+
+.meter-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.meter-header span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.meter-header strong {
+  font-size: 1rem;
+}
+
+input[type="range"] {
+  accent-color: var(--cyan);
 }
 
 .buttons {
@@ -559,20 +577,21 @@ select {
 }
 
 @media (max-width: 980px) {
-  .selectors,
-  .teams-score,
-  .penalty-tracker {
+  .setup-grid,
+  .score-panel,
+  .tracker-panel,
+  .meters {
     grid-template-columns: 1fr;
   }
 
-  .center-match {
+  .center-score {
     order: -1;
   }
 }
 
 @media (max-width: 760px) {
   .app {
-    width: min(100%, calc(100% - 12px));
+    width: min(100%, calc(100% - 10px));
   }
 
   .buttons {
@@ -591,11 +610,11 @@ select {
     transform: translateX(-50%) scale(0.88);
   }
 
-  .scoreboard {
+  .top-stats {
     width: 100%;
   }
 
-  .score-card {
+  .stat-box {
     flex: 1 1 120px;
   }
 
@@ -603,7 +622,7 @@ select {
     font-size: 2.4rem;
   }
 
-  .big-score {
+  .score {
     font-size: 2.4rem;
   }
 }
