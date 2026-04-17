@@ -1,173 +1,334 @@
-let shots = 0;
-let goals = 0;
-const maxShots = 5;
-let gameOver = false;
-let lockShot = false;
+const teams = [
+  { name: "Argentina", flag: "🇦🇷" },
+  { name: "Brasil", flag: "🇧🇷" },
+  { name: "Uruguay", flag: "🇺🇾" },
+  { name: "Chile", flag: "🇨🇱" },
+  { name: "Colombia", flag: "🇨🇴" },
+  { name: "Paraguay", flag: "🇵🇾" },
+  { name: "Perú", flag: "🇵🇪" },
+  { name: "México", flag: "🇲🇽" },
+  { name: "Estados Unidos", flag: "🇺🇸" },
+  { name: "España", flag: "🇪🇸" },
+  { name: "Francia", flag: "🇫🇷" },
+  { name: "Alemania", flag: "🇩🇪" },
+  { name: "Italia", flag: "🇮🇹" },
+  { name: "Portugal", flag: "🇵🇹" },
+  { name: "Inglaterra", flag: "🇬🇧" },
+  { name: "Países Bajos", flag: "🇳🇱" },
+  { name: "Croacia", flag: "🇭🇷" },
+  { name: "Bélgica", flag: "🇧🇪" },
+  { name: "Japón", flag: "🇯🇵" },
+  { name: "Corea del Sur", flag: "🇰🇷" }
+];
 
-const shotsEl = document.getElementById("shots");
-const goalsEl = document.getElementById("goals");
-const difficultyEl = document.getElementById("difficulty");
+const playerTeamSelect = document.getElementById("playerTeam");
+const cpuTeamSelect = document.getElementById("cpuTeam");
+const startMatchBtn = document.getElementById("startMatchBtn");
+const restartBtn = document.getElementById("restartBtn");
+
+const playerFlag = document.getElementById("playerFlag");
+const cpuFlag = document.getElementById("cpuFlag");
+const playerTeamName = document.getElementById("playerTeamName");
+const cpuTeamName = document.getElementById("cpuTeamName");
+const playerScoreEl = document.getElementById("playerScore");
+const cpuScoreEl = document.getElementById("cpuScore");
+
+const roundText = document.getElementById("roundText");
+const turnText = document.getElementById("turnText");
+const stateText = document.getElementById("stateText");
+const phaseText = document.getElementById("phaseText");
+const actionTitle = document.getElementById("actionTitle");
 const messageEl = document.getElementById("message");
-const goalkeeperEl = document.getElementById("goalkeeper");
+const shotInfo = document.getElementById("shotInfo");
+const playerTrack = document.getElementById("playerTrack");
+const cpuTrack = document.getElementById("cpuTrack");
+
+const keeperEl = document.getElementById("keeper");
 const ballEl = document.getElementById("ball");
-const shotDirectionEl = document.getElementById("shotDirection");
 
-const options = ["izquierda", "centro", "derecha"];
+const directions = ["izquierda", "centro", "derecha"];
 
-function updateScore() {
-  shotsEl.textContent = `${shots} / ${maxShots}`;
-  goalsEl.textContent = goals;
+let state = {};
 
-  if (shots < 2) {
-    difficultyEl.textContent = "Fácil";
-  } else if (shots < 4) {
-    difficultyEl.textContent = "Medio";
-  } else {
-    difficultyEl.textContent = "Difícil";
-  }
+function fillTeams() {
+  teams.forEach((team, index) => {
+    const option1 = document.createElement("option");
+    option1.value = team.name;
+    option1.textContent = `${team.flag} ${team.name}`;
+    playerTeamSelect.appendChild(option1);
+
+    const option2 = document.createElement("option");
+    option2.value = team.name;
+    option2.textContent = `${team.flag} ${team.name}`;
+    cpuTeamSelect.appendChild(option2);
+  });
+
+  playerTeamSelect.value = "Argentina";
+  cpuTeamSelect.value = "Brasil";
 }
 
-function getKeeperChoice() {
-  const difficulty = shots < 2 ? "facil" : shots < 4 ? "medio" : "dificil";
-  let keeperChoice;
-
-  if (difficulty === "facil") {
-    keeperChoice = options[Math.floor(Math.random() * options.length)];
-  } else if (difficulty === "medio") {
-    keeperChoice = Math.random() < 0.45
-      ? null
-      : options[Math.floor(Math.random() * options.length)];
-  } else {
-    keeperChoice = Math.random() < 0.6
-      ? null
-      : options[Math.floor(Math.random() * options.length)];
-  }
-
-  return keeperChoice || options[Math.floor(Math.random() * options.length)];
+function getTeamByName(name) {
+  return teams.find(team => team.name === name);
 }
 
-function moveGoalkeeper(direction) {
+function initState() {
+  state = {
+    playerTeam: getTeamByName(playerTeamSelect.value),
+    cpuTeam: getTeamByName(cpuTeamSelect.value),
+    playerScore: 0,
+    cpuScore: 0,
+    playerShots: 0,
+    cpuShots: 0,
+    round: 1,
+    phase: "player-kick",
+    playerResults: [],
+    cpuResults: [],
+    gameOver: false,
+    busy: false
+  };
+
+  if (state.playerTeam.name === state.cpuTeam.name) {
+    const alt = teams.find(t => t.name !== state.playerTeam.name);
+    state.cpuTeam = alt;
+    cpuTeamSelect.value = alt.name;
+  }
+
+  updateUI();
+  resetField();
+  messageEl.textContent = "Arrancó la tanda. Primero pateás vos.";
+  shotInfo.textContent = "Elegí dirección de tiro.";
+}
+
+function updateUI() {
+  playerFlag.textContent = state.playerTeam.flag;
+  cpuFlag.textContent = state.cpuTeam.flag;
+  playerTeamName.textContent = state.playerTeam.name;
+  cpuTeamName.textContent = state.cpuTeam.name;
+  playerScoreEl.textContent = state.playerScore;
+  cpuScoreEl.textContent = state.cpuScore;
+  roundText.textContent = state.round;
+
+  let turnLabel = "Tu disparo";
+  if (state.phase === "cpu-kick") turnLabel = "Tu atajada";
+  if (state.phase === "sudden-player") turnLabel = "Muerte súbita: tu disparo";
+  if (state.phase === "sudden-cpu") turnLabel = "Muerte súbita: tu atajada";
+
+  turnText.textContent = turnLabel;
+  actionTitle.textContent = turnLabel;
+  phaseText.textContent = state.round > 5 ? "Muerte súbita" : "Tanda de penales";
+  stateText.textContent = state.gameOver ? "Finalizado" : "Jugando";
+
+  renderTrackers();
+}
+
+function renderTrackers() {
+  playerTrack.innerHTML = "";
+  cpuTrack.innerHTML = "";
+
+  state.playerResults.forEach(result => {
+    const dot = document.createElement("div");
+    dot.className = `track-dot ${result ? "goal" : "miss"}`;
+    playerTrack.appendChild(dot);
+  });
+
+  state.cpuResults.forEach(result => {
+    const dot = document.createElement("div");
+    dot.className = `track-dot ${result ? "goal" : "miss"}`;
+    cpuTrack.appendChild(dot);
+  });
+}
+
+function resetField() {
+  keeperEl.style.left = "50%";
+  keeperEl.style.transform = "translateX(-50%)";
+  ballEl.style.left = "50%";
+  ballEl.style.bottom = "50px";
+  ballEl.style.transform = "translateX(-50%) scale(1)";
+}
+
+function moveKeeper(direction) {
   if (direction === "izquierda") {
-    goalkeeperEl.style.left = "25%";
-    goalkeeperEl.style.transform = "translateX(-50%) rotate(-8deg)";
+    keeperEl.style.left = "25%";
+    keeperEl.style.transform = "translateX(-50%) rotate(-10deg)";
   } else if (direction === "centro") {
-    goalkeeperEl.style.left = "50%";
-    goalkeeperEl.style.transform = "translateX(-50%)";
+    keeperEl.style.left = "50%";
+    keeperEl.style.transform = "translateX(-50%) scale(1.03)";
   } else {
-    goalkeeperEl.style.left = "75%";
-    goalkeeperEl.style.transform = "translateX(-50%) rotate(8deg)";
+    keeperEl.style.left = "75%";
+    keeperEl.style.transform = "translateX(-50%) rotate(10deg)";
   }
 }
 
-function animateBall(direction) {
-  let leftValue = "50%";
-  let bottomValue = "170px";
-  let xTranslate = "-50%";
+function animateBall(direction, isKick) {
+  let left = "50%";
+  if (direction === "izquierda") left = "23%";
+  if (direction === "centro") left = "50%";
+  if (direction === "derecha") left = "77%";
 
-  if (direction === "izquierda") {
-    leftValue = "23%";
-    xTranslate = "-50%";
-  } else if (direction === "centro") {
-    leftValue = "50%";
-    xTranslate = "-50%";
-  } else {
-    leftValue = "77%";
-    xTranslate = "-50%";
-  }
-
-  ballEl.style.left = leftValue;
-  ballEl.style.bottom = bottomValue;
-  ballEl.style.transform = `translateX(${xTranslate}) scale(0.72)`;
-
-  setTimeout(() => {
-    ballEl.style.left = "50%";
-    ballEl.style.bottom = "50px";
-    ballEl.style.transform = "translateX(-50%) scale(1)";
-  }, 600);
+  ballEl.style.left = left;
+  ballEl.style.bottom = "175px";
+  ballEl.style.transform = "translateX(-50%) scale(0.72)";
 }
 
-function getDirectionLabel(direction) {
+function directionLabel(direction) {
   if (direction === "izquierda") return "izquierda";
   if (direction === "centro") return "al centro";
   return "derecha";
 }
 
-function finishGame() {
-  gameOver = true;
+function randomDirection() {
+  return directions[Math.floor(Math.random() * directions.length)];
+}
 
-  if (goals === 5) {
-    messageEl.textContent = "🏆 Increíble. Metiste los 5 penales. Sos una bestia.";
-  } else if (goals >= 4) {
-    messageEl.textContent = `🔥 Terminaste con ${goals} goles. Tremenda tanda.`;
-  } else if (goals >= 3) {
-    messageEl.textContent = `⚽ Hiciste ${goals} goles. Muy buena tanda.`;
+function evaluateEarlyEnd() {
+  const playerRemaining = 5 - state.playerShots;
+  const cpuRemaining = 5 - state.cpuShots;
+
+  if (state.playerScore > state.cpuScore + cpuRemaining) return "player";
+  if (state.cpuScore > state.playerScore + playerRemaining) return "cpu";
+  return null;
+}
+
+function finishGame(winner) {
+  state.gameOver = true;
+  updateUI();
+
+  if (winner === "player") {
+    messageEl.textContent = `🏆 ¡Ganó ${state.playerTeam.name}! Le ganaste a ${state.cpuTeam.name} en la tanda.`;
+  } else if (winner === "cpu") {
+    messageEl.textContent = `😓 Ganó ${state.cpuTeam.name}. Probá otra vez y tomá revancha.`;
   } else {
-    messageEl.textContent = `😅 Terminaste con ${goals} goles. Probá otra vez y rompela.`;
+    messageEl.textContent = "🤯 Sigue la igualdad. Esto no debería pasar.";
   }
 
-  shotDirectionEl.textContent = "Tanda finalizada.";
+  shotInfo.textContent = "Partido terminado.";
 }
 
-function shoot(direction) {
-  if (gameOver || lockShot) {
-    return;
+function nextPhase() {
+  if (state.gameOver) return;
+
+  if (state.round <= 5) {
+    const earlyWinner = evaluateEarlyEnd();
+    if (earlyWinner) {
+      finishGame(earlyWinner);
+      return;
+    }
   }
 
-  lockShot = true;
-  shotDirectionEl.textContent = `Elegiste patear hacia ${getDirectionLabel(direction)}...`;
-
-  const keeperChoice = getKeeperChoice();
-
-  animateBall(direction);
-
-  setTimeout(() => {
-    moveGoalkeeper(keeperChoice);
-  }, 120);
-
-  setTimeout(() => {
-    shots++;
-
-    if (direction === keeperChoice) {
-      messageEl.textContent = `🧤 ¡Atajó! El arquero fue a ${getDirectionLabel(keeperChoice)}.`;
+  if (state.phase === "player-kick") {
+    state.phase = "cpu-kick";
+  } else if (state.phase === "cpu-kick") {
+    if (state.round < 5) {
+      state.round += 1;
+      state.phase = "player-kick";
     } else {
-      goals++;
-      messageEl.textContent = `⚽ ¡GOOOL! Pateaste ${getDirectionLabel(direction)} y el arquero fue ${getDirectionLabel(keeperChoice)}.`;
+      if (state.playerScore !== state.cpuScore) {
+        finishGame(state.playerScore > state.cpuScore ? "player" : "cpu");
+        return;
+      }
+      state.round += 1;
+      state.phase = "sudden-player";
+      messageEl.textContent = "🔥 Empieza la muerte súbita.";
+    }
+  } else if (state.phase === "sudden-player") {
+    state.phase = "sudden-cpu";
+  } else if (state.phase === "sudden-cpu") {
+    const playerLast = state.playerResults[state.playerResults.length - 1];
+    const cpuLast = state.cpuResults[state.cpuResults.length - 1];
+
+    if (playerLast !== cpuLast) {
+      finishGame(playerLast ? "player" : "cpu");
+      return;
     }
 
-    updateScore();
+    state.round += 1;
+    state.phase = "sudden-player";
+    messageEl.textContent = "🔥 Sigue la muerte súbita.";
+  }
 
-    if (shots >= maxShots) {
-      setTimeout(() => {
-        finishGame();
-        lockShot = false;
-      }, 500);
-    } else {
-      setTimeout(() => {
-        shotDirectionEl.textContent = "Esperando tu próximo disparo...";
-        goalkeeperEl.style.left = "50%";
-        goalkeeperEl.style.transform = "translateX(-50%)";
-        lockShot = false;
-      }, 500);
-    }
-  }, 650);
+  updateUI();
+  if (!state.gameOver) {
+    shotInfo.textContent = state.phase === "player-kick" || state.phase === "sudden-player"
+      ? "Elegí dirección de tiro."
+      : "Elegí hacia dónde te tirás.";
+  }
 }
 
-function restartGame() {
-  shots = 0;
-  goals = 0;
-  gameOver = false;
-  lockShot = false;
-
-  goalkeeperEl.style.left = "50%";
-  goalkeeperEl.style.transform = "translateX(-50%)";
-  ballEl.style.left = "50%";
-  ballEl.style.bottom = "50px";
-  ballEl.style.transform = "translateX(-50%) scale(1)";
-
-  messageEl.textContent = "Preparado para patear.";
-  shotDirectionEl.textContent = "Esperando tu disparo...";
-
-  updateScore();
+function registerPlayerShot(goal) {
+  state.playerShots += 1;
+  if (goal) state.playerScore += 1;
+  state.playerResults.push(goal);
 }
 
-updateScore();
+function registerCpuShot(goal) {
+  state.cpuShots += 1;
+  if (goal) state.cpuScore += 1;
+  state.cpuResults.push(goal);
+}
+
+function playAction(direction) {
+  if (state.gameOver || state.busy) return;
+
+  state.busy = true;
+
+  const isPlayerKicking = state.phase === "player-kick" || state.phase === "sudden-player";
+  const cpuChoice = randomDirection();
+
+  if (isPlayerKicking) {
+    shotInfo.textContent = `Pateaste ${directionLabel(direction)}...`;
+    animateBall(direction, true);
+
+    setTimeout(() => {
+      moveKeeper(cpuChoice);
+    }, 120);
+
+    setTimeout(() => {
+      const goal = direction !== cpuChoice;
+      registerPlayerShot(goal);
+
+      if (goal) {
+        messageEl.textContent = `⚽ ¡Gol de ${state.playerTeam.name}! El arquero fue ${directionLabel(cpuChoice)}.`;
+      } else {
+        messageEl.textContent = `🧤 ¡Atajó ${state.cpuTeam.name}! El arquero fue ${directionLabel(cpuChoice)}.`;
+      }
+
+      updateUI();
+      setTimeout(() => {
+        resetField();
+        nextPhase();
+        state.busy = false;
+      }, 700);
+    }, 700);
+  } else {
+    shotInfo.textContent = `Te tiraste ${directionLabel(direction)}...`;
+    animateBall(cpuChoice, true);
+
+    setTimeout(() => {
+      moveKeeper(direction);
+    }, 120);
+
+    setTimeout(() => {
+      const goal = cpuChoice !== direction;
+      registerCpuShot(goal);
+
+      if (goal) {
+        messageEl.textContent = `😬 Gol de ${state.cpuTeam.name}. Pateó ${directionLabel(cpuChoice)}.`;
+      } else {
+        messageEl.textContent = `🧤 ¡Atajada tuya! Te tiraste ${directionLabel(direction)} y tapaste el penal.`;
+      }
+
+      updateUI();
+      setTimeout(() => {
+        resetField();
+        nextPhase();
+        state.busy = false;
+      }, 700);
+    }, 700);
+  }
+}
+
+startMatchBtn.addEventListener("click", initState);
+restartBtn.addEventListener("click", initState);
+
+fillTeams();
+initState();

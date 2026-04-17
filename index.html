@@ -3,83 +3,145 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Penales Pro</title>
+  <title>Penales Mundial Pro</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="bg-glow glow-1"></div>
   <div class="bg-glow glow-2"></div>
 
-  <main class="game-shell">
+  <main class="app">
     <section class="topbar glass">
-      <div>
-        <p class="mini-tag">MODO FÚTBOL</p>
-        <h1>Penales Pro</h1>
-        <p class="subtitle">Elegí dónde patear e intentá meter la mayor cantidad de goles.</p>
+      <div class="title-wrap">
+        <p class="mini-tag">MODO MUNDIAL</p>
+        <h1>Penales Mundial Pro</h1>
+        <p class="subtitle">Elegí tu selección, pateá, atajá y ganá la tanda.</p>
       </div>
 
       <div class="scoreboard">
         <div class="score-card">
           <span>Ronda</span>
-          <strong id="shots">0 / 5</strong>
+          <strong id="roundText">1</strong>
         </div>
         <div class="score-card">
-          <span>Goles</span>
-          <strong id="goals">0</strong>
+          <span>Turno</span>
+          <strong id="turnText">Tu disparo</strong>
         </div>
         <div class="score-card">
-          <span>Nivel</span>
-          <strong id="difficulty">Medio</strong>
+          <span>Estado</span>
+          <strong id="stateText">Jugando</strong>
         </div>
       </div>
     </section>
 
-    <section class="stadium glass">
-      <div class="crowd"></div>
+    <section class="selection-panel glass">
+      <div class="section-head">
+        <div>
+          <p class="mini-tag">SELECCIONES</p>
+          <h2>Elegí los equipos</h2>
+        </div>
+      </div>
 
-      <div class="goal-wrapper">
-        <div class="goal">
-          <div class="net"></div>
-          <div class="goalkeeper" id="goalkeeper">
-            <div class="keeper-head"></div>
-            <div class="keeper-body"></div>
-            <div class="keeper-arm left"></div>
-            <div class="keeper-arm right"></div>
-            <div class="keeper-leg left"></div>
-            <div class="keeper-leg right"></div>
+      <div class="selectors">
+        <div class="selector-box">
+          <label for="playerTeam">Tu selección</label>
+          <select id="playerTeam"></select>
+        </div>
+
+        <div class="selector-box">
+          <label for="cpuTeam">Rival</label>
+          <select id="cpuTeam"></select>
+        </div>
+
+        <button id="startMatchBtn" class="btn btn-primary">Empezar tanda</button>
+      </div>
+    </section>
+
+    <section class="match-panel">
+      <div class="teams-score glass">
+        <div class="team-block">
+          <div class="flag" id="playerFlag">🇦🇷</div>
+          <h3 id="playerTeamName">Argentina</h3>
+          <div class="big-score" id="playerScore">0</div>
+        </div>
+
+        <div class="center-match">
+          <div class="versus">VS</div>
+          <p id="phaseText">Tanda de penales</p>
+        </div>
+
+        <div class="team-block">
+          <div class="flag" id="cpuFlag">🇧🇷</div>
+          <h3 id="cpuTeamName">Brasil</h3>
+          <div class="big-score" id="cpuScore">0</div>
+        </div>
+      </div>
+
+      <div class="penalty-tracker glass">
+        <div class="tracker-column">
+          <p class="tracker-title">Tus tiros</p>
+          <div id="playerTrack" class="tracker-row"></div>
+        </div>
+        <div class="tracker-column">
+          <p class="tracker-title">Rival</p>
+          <div id="cpuTrack" class="tracker-row"></div>
+        </div>
+      </div>
+
+      <section class="stadium glass">
+        <div class="crowd"></div>
+
+        <div class="goal-zone">
+          <div class="goal">
+            <div class="net"></div>
+
+            <div class="keeper" id="keeper">
+              <div class="keeper-shadow"></div>
+              <div class="keeper-head"></div>
+              <div class="keeper-torso"></div>
+              <div class="keeper-arm left"></div>
+              <div class="keeper-arm right"></div>
+              <div class="keeper-glove left"></div>
+              <div class="keeper-glove right"></div>
+              <div class="keeper-leg left"></div>
+              <div class="keeper-leg right"></div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="shot-direction" id="shotDirection">Esperando tu disparo...</div>
+        <div class="shot-info" id="shotInfo">Elegí una dirección para empezar.</div>
 
-      <div class="pitch">
-        <div class="penalty-spot"></div>
-        <div class="ball" id="ball"></div>
-      </div>
-    </section>
-
-    <section class="controls-panel glass">
-      <div class="controls-head">
-        <div>
-          <p class="mini-tag">DISPARO</p>
-          <h2>Elegí dirección</h2>
+        <div class="pitch">
+          <div class="penalty-spot"></div>
+          <div class="ball" id="ball"></div>
+          <div class="direction-hint left">←</div>
+          <div class="direction-hint center">↑</div>
+          <div class="direction-hint right">→</div>
         </div>
-      </div>
+      </section>
 
-      <div class="buttons">
-        <button class="shot-btn left-btn" onclick="shoot('izquierda')">Izquierda</button>
-        <button class="shot-btn center-btn" onclick="shoot('centro')">Centro</button>
-        <button class="shot-btn right-btn" onclick="shoot('derecha')">Derecha</button>
-      </div>
+      <section class="controls glass">
+        <div class="section-head">
+          <div>
+            <p class="mini-tag">CONTROL</p>
+            <h2 id="actionTitle">Tu disparo</h2>
+          </div>
+        </div>
 
-      <div class="status-box">
-        <p id="message">Preparado para patear.</p>
-      </div>
+        <div class="buttons">
+          <button class="action-btn left-btn" onclick="playAction('izquierda')">Izquierda</button>
+          <button class="action-btn center-btn" onclick="playAction('centro')">Centro</button>
+          <button class="action-btn right-btn" onclick="playAction('derecha')">Derecha</button>
+        </div>
 
-      <div class="bottom-actions">
-        <button class="secondary-btn" onclick="restartGame()">Reiniciar juego</button>
-      </div>
+        <div class="status-box">
+          <p id="message">Elegí selecciones y empezá la tanda.</p>
+        </div>
+
+        <div class="bottom-actions">
+          <button class="btn btn-secondary" id="restartBtn">Reiniciar partido</button>
+        </div>
+      </section>
     </section>
   </main>
 
